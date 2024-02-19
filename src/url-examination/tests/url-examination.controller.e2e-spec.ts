@@ -1,28 +1,32 @@
 import { HttpStatus } from '@nestjs/common';
 import { has } from 'lodash';
-import { HttpService } from '@nestjs/axios';
 import { UrlInfoType } from '~url-examination/types/url-info.type';
 import { TestHelper } from '~core/tests/test.helper';
+import { UrlExaminationTestHelper } from '~url-examination/tests/url-examination-test.helper';
+import { UrlExaminationService } from '~url-examination/services/url-examination.service';
+import { UrlExaminationServiceMock } from '~url-examination/tests/mocks/url-examination-service.mock';
 
 jest.mock('axios');
 
 describe('UrlExaminationController (e2e)', () => {
     const testHelper = new TestHelper();
-    let httpService: HttpService;
+    let urlExaminationTestHelper: UrlExaminationTestHelper;
 
     beforeAll(async () => {
-        await testHelper.initialize();
-        httpService = await testHelper.getService(HttpService);
+        await testHelper.initialize((builder) => {
+            builder.overrideProvider(UrlExaminationService).useClass(UrlExaminationServiceMock);
+            return builder;
+        });
+
+        urlExaminationTestHelper = testHelper.getTestHelperModule(UrlExaminationTestHelper);
     });
 
     afterAll(async () => {
         await testHelper.close();
     });
 
-    it('Gets reachable urls successfully without filtering priority', () => {
-        (httpService.axiosRef.get as jest.MockedFunction<typeof httpService.axiosRef.get>).mockResolvedValue(Promise.resolve({
-            status: HttpStatus.OK
-        }));
+    it('Gets reachable urls successfully without filtering priority', async () => {
+        await urlExaminationTestHelper.mockAllRequests(HttpStatus.OK);
         return testHelper
             .get('/url-examination')
             .expect(HttpStatus.OK)
@@ -31,24 +35,20 @@ describe('UrlExaminationController (e2e)', () => {
             });
     });
 
-    it('Gets reachable urls successfully with filtering priority', () => {
-        (httpService.axiosRef.get as jest.MockedFunction<typeof httpService.axiosRef.get>).mockResolvedValue(Promise.resolve({
-            status: HttpStatus.OK
-        }));
+    it('Gets reachable urls successfully with filtering priority', async () => {
+        await urlExaminationTestHelper.mockAllRequests(HttpStatus.OK);
         return testHelper
-            .get('/url-examination?priority=4')
+            .get('/url-examination?priority=3')
             .expect(HttpStatus.OK)
             .expect((res) => {
                 const firstValue: UrlInfoType = res.body[0];
                 expect(has(firstValue, 'url')).toStrictEqual(true);
-                expect(firstValue.priority).toStrictEqual(4);
+                expect(firstValue.priority).toStrictEqual(3);
             });
     });
 
-    it('Returns an empty array since no urls are reachable', () => {
-        (httpService.axiosRef.get as jest.MockedFunction<typeof httpService.axiosRef.get>).mockResolvedValue(Promise.resolve({
-            status: HttpStatus.NOT_FOUND
-        }));
+    it('Returns an empty array since no urls are reachable', async () => {
+        await urlExaminationTestHelper.mockAllRequests(HttpStatus.NOT_FOUND);
         return testHelper
             .get('/url-examination')
             .expect(HttpStatus.OK)

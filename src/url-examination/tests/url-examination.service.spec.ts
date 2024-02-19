@@ -1,15 +1,17 @@
 import { HttpStatus } from '@nestjs/common';
-import { HttpService } from '@nestjs/axios';
 import { UrlExaminationService } from '~url-examination/services/url-examination.service';
 import { UrlExaminationServiceMock } from '~url-examination/tests/mocks/url-examination-service.mock';
 import { TestHelper } from '~core/tests/test.helper';
+import { UrlInfoType } from '~url-examination/types/url-info.type';
+import { UrlExaminationTestHelper } from '~url-examination/tests/url-examination-test.helper';
 
 jest.mock('axios');
 
 describe('UrlExaminationService', () => {
     const testHelper = new TestHelper();
     let urlExaminationService: UrlExaminationService;
-    let httpService: HttpService;
+    let urlExaminationTestHelper: UrlExaminationTestHelper;
+    let mockData: UrlInfoType[] = [];
 
     beforeAll(async () => {
         await testHelper.initialize((builder) => {
@@ -17,7 +19,8 @@ describe('UrlExaminationService', () => {
             return builder;
         });
         urlExaminationService = await testHelper.getService(UrlExaminationService);
-        httpService = await testHelper.getService(HttpService);
+        urlExaminationTestHelper = testHelper.getTestHelperModule(UrlExaminationTestHelper);
+        mockData = urlExaminationService.getData();
     });
 
     afterAll(async () => {
@@ -25,19 +28,7 @@ describe('UrlExaminationService', () => {
     });
 
     it('Gets reachable urls successfully without filtering priority', async () => {
-        (httpService.axiosRef.get as jest.MockedFunction<typeof httpService.axiosRef.get>)
-            .mockResolvedValueOnce(Promise.resolve({
-                status: HttpStatus.BAD_REQUEST
-            }))
-            .mockResolvedValueOnce(Promise.resolve({
-                status: HttpStatus.NOT_FOUND
-            }))
-            .mockResolvedValueOnce(Promise.resolve({
-                status: HttpStatus.OK
-            }))
-            .mockResolvedValueOnce(Promise.resolve({
-                status: HttpStatus.OK
-            }));
+        await urlExaminationTestHelper.mockRequestsBasedOnData(mockData);
 
         const result = await urlExaminationService.examineUrls({});
 
@@ -46,19 +37,7 @@ describe('UrlExaminationService', () => {
     });
 
     it('Gets reachable urls successfully in the correct order', async () => {
-        (httpService.axiosRef.get as jest.MockedFunction<typeof httpService.axiosRef.get>)
-            .mockResolvedValueOnce(Promise.resolve({
-                status: HttpStatus.BAD_REQUEST
-            }))
-            .mockResolvedValueOnce(Promise.resolve({
-                status: HttpStatus.NOT_FOUND
-            }))
-            .mockResolvedValueOnce(Promise.resolve({
-                status: HttpStatus.OK
-            }))
-            .mockResolvedValueOnce(Promise.resolve({
-                status: HttpStatus.OK
-            }));
+        await urlExaminationTestHelper.mockRequestsBasedOnData(mockData);
 
         const result = await urlExaminationService.examineUrls({});
 
@@ -67,14 +46,7 @@ describe('UrlExaminationService', () => {
     });
 
     it('Gets reachable urls successfully with filtering priority', async () => {
-        // only mock 2 requests since only 2 requests have priority equal to 3
-        (httpService.axiosRef.get as jest.MockedFunction<typeof httpService.axiosRef.get>)
-            .mockResolvedValueOnce(Promise.resolve({
-                status: HttpStatus.NOT_FOUND
-            }))
-            .mockResolvedValueOnce(Promise.resolve({
-                status: HttpStatus.OK
-            }));
+        await urlExaminationTestHelper.mockRequestsBasedOnData(mockData.filter((item) => item.priority === 3));
         const result = await urlExaminationService.examineUrls({ priority: 3 });
 
         expect(result.length).toStrictEqual(1);
@@ -83,9 +55,7 @@ describe('UrlExaminationService', () => {
     });
 
     it('Returns an empty array since no urls are reachable', async () => {
-        (httpService.axiosRef.get as jest.MockedFunction<typeof httpService.axiosRef.get>).mockResolvedValue(Promise.resolve({
-            status: HttpStatus.BAD_REQUEST
-        }));
+        await urlExaminationTestHelper.mockAllRequests(HttpStatus.NOT_FOUND);
 
         const result = await urlExaminationService.examineUrls({ priority: 3 });
 

@@ -7,6 +7,7 @@ export class TestHelper {
     public app: INestApplication;
     public httpService: any;
     private moduleFixture: TestingModule;
+    private testHelperModules: { [_: string]: any } = {};
 
     async initialize(overrideBuilder?: (builder: TestingModuleBuilder) => TestingModuleBuilder): Promise<void> {
         let moduleBuilder = Test.createTestingModule({
@@ -36,6 +37,13 @@ export class TestHelper {
 
     getService<T>(service: Type<T>): Promise<T> {
         return this.moduleFixture.get(service, { strict: false });
+    }
+
+    getTestHelperModule<T>(testHelperModule: new (t: TestHelper) => T): T {
+        if (!this.testHelperModules[testHelperModule.name]) {
+            this.testHelperModules[testHelperModule.name] = new testHelperModule(this);
+        }
+        return this.testHelperModules[testHelperModule.name];
     }
 
     get(url: string): request.Test {
