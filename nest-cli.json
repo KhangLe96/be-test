@@ -1,0 +1,36 @@
+{
+  "collection": "@nestjs/schematics",
+  "sourceRoot": "src",
+  "compilerOptions": {
+    "assets": [
+      {
+        "include": "**/*.hbs",
+        "watchAssets": true
+      },
+      {
+        "include": "**/*.xlsx",
+        "watchAssets": true
+      },
+      {
+        "include": "i18n/**/*",
+        "watchAssets": true
+      },
+      {
+        "include": "static/**/*",
+        "watchAssets": true
+      },
+      {
+        "include": "**/*.json",
+        "watchAssets": false
+      },
+      {
+        "include": "**/*.csv",
+        "watchAssets": false
+      },
+      {
+        "include": "**/include-build-files/**/*",
+        "watchAssets": true
+      }
+    ]
+  }
+}
