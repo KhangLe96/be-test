@@ -1,6 +1,6 @@
 import { Test, TestingModule, TestingModuleBuilder } from '@nestjs/testing';
 import { INestApplication, Type, ValidationPipe } from '@nestjs/common';
-import request, { CallbackHandler } from 'supertest';
+import request from 'supertest';
 import { AppModule } from '~app.module';
 
 export class TestHelper {
@@ -38,7 +38,7 @@ export class TestHelper {
         return this.moduleFixture.get(service, { strict: false });
     }
 
-    get(url: string, callback?: CallbackHandler): request.Test {
-        return request(this.httpService).get(url, callback);
+    get(url: string): request.Test {
+        return (request as any)(this.httpService).get(url);
     }
 }

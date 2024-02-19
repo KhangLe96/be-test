@@ -20,9 +20,9 @@ describe('UrlExaminationController (e2e)', () => {
     });
 
     it('Gets reachable urls successfully without filtering priority', () => {
-        (httpService.axiosRef.get as jest.MockedFunction<typeof httpService.axiosRef.get>).mockResolvedValue({
+        (httpService.axiosRef.get as jest.MockedFunction<typeof httpService.axiosRef.get>).mockResolvedValue(Promise.resolve({
             status: HttpStatus.OK
-        });
+        }));
         return testHelper
             .get('/url-examination')
             .expect(HttpStatus.OK)
@@ -32,9 +32,9 @@ describe('UrlExaminationController (e2e)', () => {
     });
 
     it('Gets reachable urls successfully with filtering priority', () => {
-        (httpService.axiosRef.get as jest.MockedFunction<typeof httpService.axiosRef.get>).mockResolvedValue({
+        (httpService.axiosRef.get as jest.MockedFunction<typeof httpService.axiosRef.get>).mockResolvedValue(Promise.resolve({
             status: HttpStatus.OK
-        });
+        }));
         return testHelper
             .get('/url-examination?priority=4')
             .expect(HttpStatus.OK)
@@ -46,9 +46,9 @@ describe('UrlExaminationController (e2e)', () => {
     });
 
     it('Returns an empty array since no urls are reachable', () => {
-        (httpService.axiosRef.get as jest.MockedFunction<typeof httpService.axiosRef.get>).mockResolvedValue({
+        (httpService.axiosRef.get as jest.MockedFunction<typeof httpService.axiosRef.get>).mockResolvedValue(Promise.resolve({
             status: HttpStatus.NOT_FOUND
-        });
+        }));
         return testHelper
             .get('/url-examination')
             .expect(HttpStatus.OK)
